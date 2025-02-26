@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 
 const schema = z.object({
+  name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
 });
 
-export default function LoginForm() {
-  const { login } = useAuth();
+export default function RegisterForm() {
+  const { register: registerUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const {
     register,
@@ -25,7 +26,7 @@ export default function LoginForm() {
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      await login(data.email, data.password);
+      await registerUser(data.name, data.email, data.password);
     } catch (error) {
       console.error(error);
     } finally {
@@ -35,6 +36,14 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Input type="text" placeholder="Name" {...register("name")} />
+        {errors.name && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.name.message as string}
+          </p>
+        )}
+      </div>
       <div>
         <Input type="email" placeholder="Email" {...register("email")} />
         {errors.email && (
@@ -60,7 +69,7 @@ export default function LoginForm() {
         className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
         disabled={isLoading}
       >
-        {isLoading ? "Logging in..." : "Login"}
+        {isLoading ? "Creating account..." : "Register"}
       </Button>
     </form>
   );
