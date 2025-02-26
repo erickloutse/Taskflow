@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -15,6 +16,7 @@ const schema = z.object({
 export default function RegisterForm() {
   const { register: registerUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -52,12 +54,23 @@ export default function RegisterForm() {
           </p>
         )}
       </div>
-      <div>
+      <div className="relative">
         <Input
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Password"
           {...register("password")}
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </button>
         {errors.password && (
           <p className="text-sm text-destructive mt-1">
             {errors.password.message as string}

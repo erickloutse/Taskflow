@@ -18,6 +18,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import { type Task, type Column } from "@/types";
+import { createTask } from "@/lib/api";
 
 const initialColumns: Column[] = [
   {
@@ -45,6 +46,32 @@ function App() {
   const { isAuthenticated, user, logout } = useAuth();
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+  const handleCreateTask = async (taskData: Partial<Task>) => {
+    try {
+      const newTask = await createTask(taskData);
+      setColumns((prevColumns) => {
+        const newColumns = [...prevColumns];
+        const todoColumn = newColumns.find((col) => col.title === "To Do");
+        if (todoColumn) {
+          todoColumn.tasks.push(newTask);
+        }
+        return newColumns;
+      });
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+      return newTask;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create task",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -137,7 +164,7 @@ function App() {
           </div>
           <div className="ml-auto flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
-            <CreateTaskDialog />
+            <CreateTaskDialog onCreateTask={handleCreateTask} />
             <Button
               variant="ghost"
               size="icon"
