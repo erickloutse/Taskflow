@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -18,7 +18,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import { type Task, type Column } from "@/types";
-import { createTask } from "@/lib/api";
+import { createTask, getTasks, updateTask } from "@/lib/api";
 
 const initialColumns: Column[] = [
   {
@@ -47,6 +47,40 @@ function App() {
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchTasks();
+    }
+  }, [isAuthenticated]);
+
+  const fetchTasks = async () => {
+    try {
+      const tasks = await getTasks();
+
+      // Organize tasks into columns
+      const updatedColumns = [...initialColumns];
+
+      tasks.forEach((task: Task) => {
+        if (task.status === "todo") {
+          updatedColumns[0].tasks.push(task);
+        } else if (task.status === "in-progress") {
+          updatedColumns[1].tasks.push(task);
+        } else if (task.status === "done") {
+          updatedColumns[2].tasks.push(task);
+        }
+      });
+
+      setColumns(updatedColumns);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load tasks",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateTask = async (taskData: Partial<Task>) => {
     try {
       const newTask = await createTask(taskData);
@@ -73,7 +107,60 @@ function App() {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleUpdateTask = async (updatedTask: Task) => {
+    try {
+      setColumns((prevColumns) => {
+        const newColumns = [...prevColumns];
+
+        // Find and remove the task from its current column
+        newColumns.forEach((column) => {
+          const taskIndex = column.tasks.findIndex(
+            (t) => t.id === updatedTask.id
+          );
+          if (taskIndex !== -1) {
+            column.tasks.splice(taskIndex, 1);
+          }
+        });
+
+        // Add the updated task to the appropriate column
+        const targetColumn = newColumns.find((col) => {
+          if (updatedTask.status === "todo") return col.title === "To Do";
+          if (updatedTask.status === "in-progress")
+            return col.title === "In Progress";
+          if (updatedTask.status === "done") return col.title === "Done";
+          return false;
+        });
+
+        if (targetColumn) {
+          targetColumn.tasks.push(updatedTask);
+        }
+
+        return newColumns;
+      });
+
+      toast({
+        title: "Success",
+        description: "Task updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update task",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setColumns((prevColumns) => {
+      return prevColumns.map((column) => ({
+        ...column,
+        tasks: column.tasks.filter((task) => task.id !== taskId),
+      }));
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) return;
@@ -81,35 +168,60 @@ function App() {
     const activeTask = active.data.current as Task;
     const overId = over.id as string;
 
-    setColumns((prevColumns) => {
-      const newColumns = [...prevColumns];
+    // Find the target column
+    const targetColumn = columns.find((col) => col.id === overId);
+    if (!targetColumn) return;
 
-      // Remove task from source column
-      const sourceColumn = newColumns.find((col) =>
-        col.tasks.some((task) => task.id === activeTask.id)
-      );
-      if (sourceColumn) {
-        sourceColumn.tasks = sourceColumn.tasks.filter(
-          (task) => task.id !== activeTask.id
+    // Map column title to status
+    const statusMap: Record<string, Task["status"]> = {
+      "To Do": "todo",
+      "In Progress": "in-progress",
+      Done: "done",
+    };
+
+    const newStatus = statusMap[targetColumn.title];
+    if (!newStatus || activeTask.status === newStatus) return;
+
+    try {
+      // Update task status in the backend
+      const updatedTask = await updateTask(activeTask.id, {
+        ...activeTask,
+        status: newStatus,
+      });
+
+      setColumns((prevColumns) => {
+        const newColumns = [...prevColumns];
+
+        // Remove task from source column
+        const sourceColumn = newColumns.find((col) =>
+          col.tasks.some((task) => task.id === activeTask.id)
         );
-      }
+        if (sourceColumn) {
+          sourceColumn.tasks = sourceColumn.tasks.filter(
+            (task) => task.id !== activeTask.id
+          );
+        }
 
-      // Add task to target column
-      const targetColumn = newColumns.find((col) => col.id === overId);
-      if (targetColumn) {
-        targetColumn.tasks.push({
-          ...activeTask,
-          status: targetColumn.title.toLowerCase() as Task["status"],
-        });
+        // Add task to target column
+        const targetColumn = newColumns.find((col) => col.id === overId);
+        if (targetColumn) {
+          targetColumn.tasks.push(updatedTask);
+        }
 
-        toast({
-          title: "Task Updated",
-          description: `Task moved to ${targetColumn.title}`,
-        });
-      }
+        return newColumns;
+      });
 
-      return newColumns;
-    });
+      toast({
+        title: "Task Updated",
+        description: `Task moved to ${targetColumn.title}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isAuthenticated) {

@@ -1,36 +1,61 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const schema = z.object({
   title: z.string().min(1),
   description: z.string(),
-  priority: z.enum(['low', 'medium', 'high']),
+  priority: z.enum(["low", "medium", "high"]),
   dueDate: z.date(),
 });
 
 interface CreateTaskDialogProps {
-  onCreateTask: (task: any) => Promise<void>;
+  onCreateTask: (task: any) => Promise<any>;
 }
 
-export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps) {
+export default function CreateTaskDialog({
+  onCreateTask,
+}: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      priority: 'medium',
+      priority: "medium",
       dueDate: new Date(),
     },
   });
@@ -38,8 +63,12 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      await onCreateTask(data);
+      await onCreateTask({
+        ...data,
+        status: "todo",
+      });
       setOpen(false);
+      reset();
     } catch (error) {
       console.error(error);
     } finally {
@@ -50,8 +79,8 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          Create Task
+        <Button className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+          <Plus className="mr-2 h-4 w-4" /> Create Task
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -60,10 +89,7 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Input
-              placeholder="Task title"
-              {...register('title')}
-            />
+            <Input placeholder="Task title" {...register("title")} />
             {errors.title && (
               <p className="text-sm text-destructive mt-1">
                 {errors.title.message as string}
@@ -71,14 +97,11 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
             )}
           </div>
           <div>
-            <Textarea
-              placeholder="Description"
-              {...register('description')}
-            />
+            <Textarea placeholder="Description" {...register("description")} />
           </div>
           <div>
             <Select
-              onValueChange={(value) => setValue('priority', value as any)}
+              onValueChange={(value) => setValue("priority", value as any)}
               defaultValue="medium"
             >
               <SelectTrigger>
@@ -97,13 +120,13 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !watch('dueDate') && 'text-muted-foreground'
+                    "w-full justify-start text-left font-normal",
+                    !watch("dueDate") && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {watch('dueDate') ? (
-                    format(watch('dueDate'), 'PPP')
+                  {watch("dueDate") ? (
+                    format(watch("dueDate"), "PPP")
                   ) : (
                     <span>Pick a date</span>
                   )}
@@ -112,15 +135,15 @@ export default function CreateTaskDialog({ onCreateTask }: CreateTaskDialogProps
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={watch('dueDate')}
-                  onSelect={(date) => setValue('dueDate', date)}
+                  selected={watch("dueDate")}
+                  onSelect={(date) => setValue("dueDate", date)}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Task'}
+            {isLoading ? "Creating..." : "Create Task"}
           </Button>
         </form>
       </DialogContent>

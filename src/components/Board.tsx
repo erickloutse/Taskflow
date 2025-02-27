@@ -1,6 +1,6 @@
-import { useDroppable } from '@dnd-kit/core';
-import { type Column } from '@/types';
-import TaskCard from './TaskCard';
+import { useDroppable } from "@dnd-kit/core";
+import { type Column } from "@/types";
+import TaskCard from "./TaskCard";
 
 interface BoardProps {
   columns: Column[];
@@ -21,11 +21,12 @@ function Column({ column }: { column: Column }) {
     id: column.id,
   });
 
-  const columnClass = {
-    'To Do': 'column-todo',
-    'In Progress': 'column-in-progress',
-    'Done': 'column-done',
-  }[column.title] || '';
+  const columnClass =
+    {
+      "To Do": "column-todo",
+      "In Progress": "column-in-progress",
+      Done: "column-done",
+    }[column.title] || "";
 
   return (
     <div
@@ -35,7 +36,18 @@ function Column({ column }: { column: Column }) {
       <h3 className="font-bold text-lg mb-4 text-center">{column.title}</h3>
       <div className="space-y-3">
         {column.tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            onUpdate={(updatedTask) => {
+              // Handle task update
+              console.log("Task updated:", updatedTask);
+            }}
+            onDelete={(taskId) => {
+              // Handle task deletion
+              console.log("Task deleted:", taskId);
+            }}
+          />
         ))}
       </div>
     </div>
