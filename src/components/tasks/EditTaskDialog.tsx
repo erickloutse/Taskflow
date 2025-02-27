@@ -63,7 +63,7 @@ export default function EditTaskDialog({
     resolver: zodResolver(schema),
     defaultValues: {
       title: task.title,
-      description: task.description,
+      description: task.description || "",
       priority: task.priority,
       dueDate: new Date(task.dueDate),
     },
@@ -72,7 +72,10 @@ export default function EditTaskDialog({
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedTask = await updateTask(task.id, data);
+      const updatedTask = await updateTask(task.id, {
+        ...data,
+        status: task.status,
+      });
       onUpdate(updatedTask);
       onOpenChange(false);
       toast({

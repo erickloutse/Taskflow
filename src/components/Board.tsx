@@ -40,11 +40,9 @@ function Column({ column }: { column: Column }) {
             key={task.id}
             task={task}
             onUpdate={(updatedTask) => {
-              // Handle task update
               console.log("Task updated:", updatedTask);
             }}
             onDelete={(taskId) => {
-              // Handle task deletion
               console.log("Task deleted:", taskId);
             }}
           />

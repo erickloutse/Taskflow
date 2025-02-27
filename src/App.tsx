@@ -18,7 +18,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import { type Task, type Column } from "@/types";
-import { createTask, getTasks, updateTask } from "@/lib/api";
+import { createTask, getTasks, updateTask, deleteTask } from "@/lib/api";
 
 const initialColumns: Column[] = [
   {
@@ -151,13 +151,27 @@ function App() {
     }
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    setColumns((prevColumns) => {
-      return prevColumns.map((column) => ({
-        ...column,
-        tasks: column.tasks.filter((task) => task.id !== taskId),
-      }));
-    });
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      setColumns((prevColumns) => {
+        return prevColumns.map((column) => ({
+          ...column,
+          tasks: column.tasks.filter((task) => task.id !== taskId),
+        }));
+      });
+
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {

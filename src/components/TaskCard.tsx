@@ -2,7 +2,6 @@ import { useDraggable } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import {
   Calendar,
-  Users,
   AlertCircle,
   Clock,
   ArrowRight,
@@ -128,17 +127,23 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
           </div>
 
           <div className="flex items-center -space-x-2">
-            {task.assignees.map((assignee) => (
-              <Avatar
-                key={assignee.id}
-                className="h-8 w-8 border-2 border-background transition-transform hover:scale-110"
-              >
-                <AvatarImage src={assignee.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
-                  {assignee.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-            ))}
+            {task.assignees && task.assignees.length > 0 ? (
+              task.assignees.map((assignee) => (
+                <Avatar
+                  key={assignee.id}
+                  className="h-8 w-8 border-2 border-background transition-transform hover:scale-110"
+                >
+                  <AvatarImage src={assignee.avatar} />
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
+                    {assignee.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                No assignees
+              </span>
+            )}
           </div>
         </div>
       </motion.div>
