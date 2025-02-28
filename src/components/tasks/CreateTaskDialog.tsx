@@ -70,7 +70,7 @@ export default function CreateTaskDialog({
       setOpen(false);
       reset();
     } catch (error) {
-      console.error(error);
+      console.error("Error creating task:", error);
     } finally {
       setIsLoading(false);
     }

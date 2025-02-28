@@ -45,7 +45,19 @@ function App() {
   const { toast } = useToast();
   const { isAuthenticated, user, logout } = useAuth();
 
-  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10, // 10px of movement before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // 250ms delay before drag starts
+        tolerance: 5, // 5px of movement allowed before drag starts
+      },
+    })
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -58,7 +70,10 @@ function App() {
       const tasks = await getTasks();
 
       // Organize tasks into columns
-      const updatedColumns = [...initialColumns];
+      const updatedColumns = [...initialColumns].map((col) => ({
+        ...col,
+        tasks: [],
+      }));
 
       tasks.forEach((task: Task) => {
         if (task.status === "todo") {
@@ -109,13 +124,18 @@ function App() {
 
   const handleUpdateTask = async (updatedTask: Task) => {
     try {
+      const result = await updateTask(
+        updatedTask.id || updatedTask._id,
+        updatedTask
+      );
+
       setColumns((prevColumns) => {
         const newColumns = [...prevColumns];
 
         // Find and remove the task from its current column
         newColumns.forEach((column) => {
           const taskIndex = column.tasks.findIndex(
-            (t) => t.id === updatedTask.id
+            (t) => (t.id || t._id) === (updatedTask.id || updatedTask._id)
           );
           if (taskIndex !== -1) {
             column.tasks.splice(taskIndex, 1);
@@ -132,7 +152,7 @@ function App() {
         });
 
         if (targetColumn) {
-          targetColumn.tasks.push(updatedTask);
+          targetColumn.tasks.push(result);
         }
 
         return newColumns;
@@ -142,12 +162,16 @@ function App() {
         title: "Success",
         description: "Task updated successfully",
       });
+
+      return result;
     } catch (error) {
+      console.error("Error updating task:", error);
       toast({
         title: "Error",
         description: "Failed to update task",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -157,7 +181,9 @@ function App() {
       setColumns((prevColumns) => {
         return prevColumns.map((column) => ({
           ...column,
-          tasks: column.tasks.filter((task) => task.id !== taskId),
+          tasks: column.tasks.filter(
+            (task) => (task.id || task._id) !== taskId
+          ),
         }));
       });
 
@@ -166,6 +192,7 @@ function App() {
         description: "Task deleted successfully",
       });
     } catch (error) {
+      console.error("Error deleting task:", error);
       toast({
         title: "Error",
         description: "Failed to delete task",
@@ -198,7 +225,7 @@ function App() {
 
     try {
       // Update task status in the backend
-      const updatedTask = await updateTask(activeTask.id, {
+      const updatedTask = await updateTask(activeTask.id || activeTask._id, {
         ...activeTask,
         status: newStatus,
       });
@@ -208,11 +235,15 @@ function App() {
 
         // Remove task from source column
         const sourceColumn = newColumns.find((col) =>
-          col.tasks.some((task) => task.id === activeTask.id)
+          col.tasks.some(
+            (task) =>
+              (task.id || task._id) === (activeTask.id || activeTask._id)
+          )
         );
         if (sourceColumn) {
           sourceColumn.tasks = sourceColumn.tasks.filter(
-            (task) => task.id !== activeTask.id
+            (task) =>
+              (task.id || task._id) !== (activeTask.id || activeTask._id)
           );
         }
 
@@ -230,6 +261,7 @@ function App() {
         description: `Task moved to ${targetColumn.title}`,
       });
     } catch (error) {
+      console.error("Error updating task status:", error);
       toast({
         title: "Error",
         description: "Failed to update task status",

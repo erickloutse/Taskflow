@@ -10,24 +10,28 @@ const menuItems = [
     label: "Dashboard",
     href: "#dashboard",
     color: "from-indigo-500 to-purple-500",
+    content: "Task Board View",
   },
   {
     icon: Users,
     label: "Team",
     href: "#team",
-    color: "from-purple-500 to-pink-500",
+    color: "from-purple-500 to-green-500",
+    content: "Team Members & Collaboration",
   },
   {
     icon: Calendar,
     label: "Calendar",
     href: "#calendar",
-    color: "from-pink-500 to-rose-500",
+    color: "from-pink-500 to-yellow-500",
+    content: "Task Calendar View",
   },
   {
     icon: Settings,
     label: "Settings",
     href: "#settings",
     color: "from-rose-500 to-orange-500",
+    content: "Application Settings",
   },
 ];
 

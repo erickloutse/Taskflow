@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import EditTaskDialog from "./tasks/EditTaskDialog";
 import { useToast } from "@/hooks/use-toast";
-import { deleteTask } from "@/lib/api";
+import { deleteTask, updateTask } from "@/lib/api";
 
 interface TaskCardProps {
   task: Task;
@@ -30,7 +30,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
   const { toast } = useToast();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
-      id: task.id,
+      id: task.id || task._id,
       data: task,
     });
 
@@ -55,18 +55,30 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
   const handleDelete = async () => {
     try {
-      await deleteTask(task.id);
-      onDelete(task.id);
+      await deleteTask(task.id || task._id);
+      onDelete(task.id || task._id);
       toast({
         title: "Success",
         description: "Task deleted successfully",
       });
     } catch (error) {
+      console.error("Error deleting task:", error);
       toast({
         title: "Error",
         description: "Failed to delete task",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleUpdate = async (updatedTask: Task) => {
+    try {
+      const result = await updateTask(task.id || task._id, updatedTask);
+      onUpdate(result);
+      return result;
+    } catch (error) {
+      console.error("Error updating task:", error);
+      throw error;
     }
   };
 
@@ -130,7 +142,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
             {task.assignees && task.assignees.length > 0 ? (
               task.assignees.map((assignee) => (
                 <Avatar
-                  key={assignee.id}
+                  key={assignee.id || assignee._id}
                   className="h-8 w-8 border-2 border-background transition-transform hover:scale-110"
                 >
                   <AvatarImage src={assignee.avatar} />
@@ -152,7 +164,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
         task={task}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        onUpdate={onUpdate}
+        onUpdate={handleUpdate}
       />
     </>
   );

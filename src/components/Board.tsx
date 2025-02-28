@@ -37,7 +37,7 @@ function Column({ column }: { column: Column }) {
       <div className="space-y-3">
         {column.tasks.map((task) => (
           <TaskCard
-            key={task.id}
+            key={task.id || task._id}
             task={task}
             onUpdate={(updatedTask) => {
               console.log("Task updated:", updatedTask);

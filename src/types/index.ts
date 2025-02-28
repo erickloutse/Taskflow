@@ -1,16 +1,18 @@
 export interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   avatar: string;
 }
 
 export interface Task {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
-  status: 'todo' | 'in-progress' | 'done';
-  priority: 'low' | 'medium' | 'high';
+  status: "todo" | "in-progress" | "done";
+  priority: "low" | "medium" | "high";
   assignees: User[];
   dueDate: string;
   createdAt: string;
@@ -31,7 +33,7 @@ export interface Board {
 
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
   message: string;
   createdAt: string;
 }

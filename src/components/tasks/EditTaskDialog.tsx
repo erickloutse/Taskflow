@@ -27,7 +27,6 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { updateTask } from "@/lib/api";
 import { type Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,7 +41,7 @@ interface EditTaskDialogProps {
   task: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (task: Task) => void;
+  onUpdate: (task: Task) => Promise<Task>;
 }
 
 export default function EditTaskDialog({
@@ -72,17 +71,19 @@ export default function EditTaskDialog({
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const updatedTask = await updateTask(task.id, {
+      const updatedTask = await onUpdate({
+        ...task,
         ...data,
-        status: task.status,
       });
-      onUpdate(updatedTask);
+
       onOpenChange(false);
       toast({
         title: "Success",
         description: "Task updated successfully",
       });
+      return updatedTask;
     } catch (error) {
+      console.error("Error updating task:", error);
       toast({
         title: "Error",
         description: "Failed to update task",
