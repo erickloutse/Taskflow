@@ -124,10 +124,12 @@ function App() {
 
   const handleUpdateTask = async (updatedTask: Task) => {
     try {
-      const result = await updateTask(
-        updatedTask.id || updatedTask._id,
-        updatedTask
-      );
+      const taskId = updatedTask._id || updatedTask.id;
+      if (!taskId) {
+        throw new Error("Task ID not found");
+      }
+
+      const result = await updateTask(taskId, updatedTask);
 
       setColumns((prevColumns) => {
         const newColumns = [...prevColumns];
@@ -135,7 +137,7 @@ function App() {
         // Find and remove the task from its current column
         newColumns.forEach((column) => {
           const taskIndex = column.tasks.findIndex(
-            (t) => (t.id || t._id) === (updatedTask.id || updatedTask._id)
+            (t) => (t.id || t._id) === taskId
           );
           if (taskIndex !== -1) {
             column.tasks.splice(taskIndex, 1);
@@ -225,7 +227,12 @@ function App() {
 
     try {
       // Update task status in the backend
-      const updatedTask = await updateTask(activeTask.id || activeTask._id, {
+      const taskId = activeTask._id || activeTask.id;
+      if (!taskId) {
+        throw new Error("Task ID not found");
+      }
+
+      const updatedTask = await updateTask(taskId, {
         ...activeTask,
         status: newStatus,
       });
@@ -235,15 +242,11 @@ function App() {
 
         // Remove task from source column
         const sourceColumn = newColumns.find((col) =>
-          col.tasks.some(
-            (task) =>
-              (task.id || task._id) === (activeTask.id || activeTask._id)
-          )
+          col.tasks.some((task) => (task.id || task._id) === taskId)
         );
         if (sourceColumn) {
           sourceColumn.tasks = sourceColumn.tasks.filter(
-            (task) =>
-              (task.id || task._id) !== (activeTask.id || activeTask._id)
+            (task) => (task.id || task._id) !== taskId
           );
         }
 

@@ -57,9 +57,19 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
+    const taskId = task._id || task.id;
+    if (!taskId) {
+      toast({
+        title: "Error",
+        description: "Task ID not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await deleteTask(task.id || task._id);
-      onDelete(task.id || task._id);
+      await deleteTask(taskId);
+      onDelete(taskId);
       toast({
         title: "Success",
         description: "Task deleted successfully",
@@ -82,7 +92,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
   const handleUpdate = async (updatedTask: Task) => {
     try {
-      const result = await updateTask(task.id || task._id, updatedTask);
+      const result = await updateTask(task._id || task.id, updatedTask);
       onUpdate(result);
       return result;
     } catch (error) {
@@ -93,7 +103,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative group">
         <motion.div
           ref={setNodeRef}
           style={style}
@@ -156,12 +166,12 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
           </div>
         </motion.div>
 
-        {/* Boutons d'action positionnés absolument au-dessus de la carte */}
-        <div className="absolute top-2 right-2 flex gap-1 z-10">
+        {/* Boutons d'action avec positionnement amélioré */}
+        <div className="absolute top-0 right-0 flex gap-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 bg-white/90 hover:bg-indigo-100 text-indigo-600 shadow-sm"
+            className="h-8 w-8 bg-white shadow-md hover:bg-indigo-100 text-indigo-600 border border-indigo-100"
             onClick={handleEdit}
           >
             <Edit2 className="h-4 w-4" />
@@ -169,7 +179,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 bg-white/90 hover:bg-red-100 text-red-600 shadow-sm"
+            className="h-8 w-8 bg-white shadow-md hover:bg-red-100 text-red-600 border border-red-100"
             onClick={handleDelete}
           >
             <Trash2 className="h-4 w-4" />

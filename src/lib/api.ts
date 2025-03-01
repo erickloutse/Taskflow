@@ -33,12 +33,25 @@ export const createTask = async (task: Partial<Task>) => {
 };
 
 export const updateTask = async (id: string, task: Partial<Task>) => {
+  // Assurez-vous que l'ID est valide
+  if (!id) {
+    throw new Error("Task ID is required for update");
+  }
+
   const response = await api.put(`/tasks/${id}`, task);
   return response.data;
 };
 
 export const deleteTask = async (id: string) => {
-  const response = await api.delete(`/tasks/${id}`);
+  // Assurez-vous que l'ID est valide
+  if (!id) {
+    throw new Error("Task ID is required for deletion");
+  }
+
+  // Utilisez toujours l'ID MongoDB (_id) pour les opérations de suppression
+  const taskId = id.includes("_id") ? id : id;
+
+  const response = await api.delete(`/tasks/${taskId}`);
   return response.data;
 };
 
