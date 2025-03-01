@@ -53,7 +53,8 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
     high: <AlertCircle className="h-4 w-4" />,
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêche la propagation de l'événement
     try {
       await deleteTask(task.id || task._id);
       onDelete(task.id || task._id);
@@ -69,6 +70,11 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêche la propagation de l'événement
+    setIsEditDialogOpen(true);
   };
 
   const handleUpdate = async (updatedTask: Task) => {
@@ -115,7 +121,8 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-gray-500 hover:text-indigo-600"
-              onClick={() => setIsEditDialogOpen(true)}
+              onClick={handleEdit}
+              type="button"
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -124,6 +131,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
               size="icon"
               className="h-8 w-8 text-gray-500 hover:text-red-600"
               onClick={handleDelete}
+              type="button"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
