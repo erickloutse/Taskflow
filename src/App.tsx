@@ -7,6 +7,8 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import { Layers, Plus, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,7 @@ import RegisterForm from "@/components/auth/RegisterForm";
 import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import { type Task, type Column } from "@/types";
 import { createTask, getTasks, updateTask, deleteTask } from "@/lib/api";
+import TaskCard from "@/components/TaskCard";
 
 const initialColumns: Column[] = [
   {
@@ -42,19 +45,20 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const { toast } = useToast();
   const { isAuthenticated, user, logout } = useAuth();
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 10, // 10px of movement before drag starts
+        distance: 5, // Réduit à 5px pour une activation plus rapide
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // 250ms delay before drag starts
-        tolerance: 5, // 5px of movement allowed before drag starts
+        delay: 100, // Réduit à 100ms pour une activation plus rapide
+        tolerance: 3, // Réduit à 3px pour une activation plus rapide
       },
     })
   );
@@ -146,10 +150,10 @@ function App() {
 
         // Add the updated task to the appropriate column
         const targetColumn = newColumns.find((col) => {
-          if (updatedTask.status === "todo") return col.title === "To Do";
-          if (updatedTask.status === "in-progress")
+          if (result.status === "todo") return col.title === "To Do";
+          if (result.status === "in-progress")
             return col.title === "In Progress";
-          if (updatedTask.status === "done") return col.title === "Done";
+          if (result.status === "done") return col.title === "Done";
           return false;
         });
 
@@ -203,7 +207,13 @@ function App() {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveTask(active.data.current as Task);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveTask(null);
     const { active, over } = event;
 
     if (!over) return;
@@ -351,8 +361,27 @@ function App() {
         </motion.div>
 
         <main className="flex-1 overflow-auto p-6">
-          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-            <Board columns={columns} />
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <Board
+              columns={columns}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
+            <DragOverlay>
+              {activeTask ? (
+                <div className="w-full max-w-md">
+                  <TaskCard
+                    task={activeTask}
+                    onUpdate={handleUpdateTask}
+                    onDelete={handleDeleteTask}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
         </main>
       </div>

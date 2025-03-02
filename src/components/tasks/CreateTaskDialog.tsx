@@ -45,6 +45,7 @@ export default function CreateTaskDialog({
 }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const {
     register,
     handleSubmit,
@@ -73,6 +74,13 @@ export default function CreateTaskDialog({
       console.error("Error creating task:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setValue("dueDate", date);
+      setCalendarOpen(false); // Ferme le calendrier après la sélection
     }
   };
 
@@ -115,7 +123,7 @@ export default function CreateTaskDialog({
             </Select>
           </div>
           <div>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -136,7 +144,7 @@ export default function CreateTaskDialog({
                 <Calendar
                   mode="single"
                   selected={watch("dueDate")}
-                  onSelect={(date) => setValue("dueDate", date)}
+                  onSelect={handleDateSelect}
                   initialFocus
                 />
               </PopoverContent>

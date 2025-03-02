@@ -17,12 +17,11 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import EditTaskDialog from "./tasks/EditTaskDialog";
 import { useToast } from "@/hooks/use-toast";
-import { deleteTask, updateTask } from "@/lib/api";
 
 interface TaskCardProps {
   task: Task;
-  onUpdate: (updatedTask: Task) => void;
-  onDelete: (taskId: string) => void;
+  onUpdate: (updatedTask: Task) => Promise<Task>;
+  onDelete: (taskId: string) => Promise<void>;
 }
 
 export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
@@ -68,12 +67,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
     }
 
     try {
-      await deleteTask(taskId);
-      onDelete(taskId);
-      toast({
-        title: "Success",
-        description: "Task deleted successfully",
-      });
+      await onDelete(taskId);
     } catch (error) {
       console.error("Error deleting task:", error);
       toast({
@@ -92,8 +86,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
   const handleUpdate = async (updatedTask: Task) => {
     try {
-      const result = await updateTask(task._id || task.id, updatedTask);
-      onUpdate(result);
+      const result = await onUpdate(updatedTask);
       return result;
     } catch (error) {
       console.error("Error updating task:", error);
@@ -103,7 +96,27 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
 
   return (
     <>
-      <div className="relative group">
+      {/* Boutons d'action positionnés au-dessus de la carte */}
+      <div className="relative mb-8">
+        <div className="absolute -top-3 right-2 flex gap-1 z-20">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 bg-white hover:bg-indigo-100 text-indigo-600 shadow-md"
+            onClick={handleEdit}
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 bg-white hover:bg-red-100 text-red-600 shadow-md"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+
         <motion.div
           ref={setNodeRef}
           style={style}
@@ -165,26 +178,6 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
             </div>
           </div>
         </motion.div>
-
-        {/* Boutons d'action avec positionnement amélioré */}
-        <div className="absolute top-0 right-0 flex gap-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <Button
-            variant="secondary"
-            size="icon"
-            className="h-8 w-8 bg-white shadow-md hover:bg-indigo-100 text-indigo-600 border border-indigo-100"
-            onClick={handleEdit}
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="h-8 w-8 bg-white shadow-md hover:bg-red-100 text-red-600 border border-red-100"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <EditTaskDialog

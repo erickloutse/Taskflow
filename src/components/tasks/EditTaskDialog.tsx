@@ -51,6 +51,7 @@ export default function EditTaskDialog({
   onUpdate,
 }: EditTaskDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { toast } = useToast();
   const {
     register,
@@ -94,6 +95,13 @@ export default function EditTaskDialog({
     }
   };
 
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setValue("dueDate", date);
+      setCalendarOpen(false); // Ferme le calendrier après la sélection
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -128,7 +136,7 @@ export default function EditTaskDialog({
             </Select>
           </div>
           <div>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -149,7 +157,7 @@ export default function EditTaskDialog({
                 <Calendar
                   mode="single"
                   selected={watch("dueDate")}
-                  onSelect={(date) => setValue("dueDate", date)}
+                  onSelect={handleDateSelect}
                   initialFocus
                 />
               </PopoverContent>

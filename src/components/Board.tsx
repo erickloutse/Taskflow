@@ -1,22 +1,39 @@
 import { useDroppable } from "@dnd-kit/core";
-import { type Column } from "@/types";
+import { type Column, type Task } from "@/types";
 import TaskCard from "./TaskCard";
 
 interface BoardProps {
   columns: Column[];
+  onUpdateTask: (task: Task) => Promise<Task>;
+  onDeleteTask: (taskId: string) => Promise<void>;
 }
 
-export default function Board({ columns }: BoardProps) {
+export default function Board({
+  columns,
+  onUpdateTask,
+  onDeleteTask,
+}: BoardProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {columns.map((column) => (
-        <Column key={column.id} column={column} />
+        <Column
+          key={column.id}
+          column={column}
+          onUpdateTask={onUpdateTask}
+          onDeleteTask={onDeleteTask}
+        />
       ))}
     </div>
   );
 }
 
-function Column({ column }: { column: Column }) {
+interface ColumnProps {
+  column: Column;
+  onUpdateTask: (task: Task) => Promise<Task>;
+  onDeleteTask: (taskId: string) => Promise<void>;
+}
+
+function Column({ column, onUpdateTask, onDeleteTask }: ColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
   });
@@ -39,12 +56,8 @@ function Column({ column }: { column: Column }) {
           <TaskCard
             key={task._id || task.id}
             task={task}
-            onUpdate={(updatedTask) => {
-              console.log("Task updated:", updatedTask);
-            }}
-            onDelete={(taskId) => {
-              console.log("Task deleted:", taskId);
-            }}
+            onUpdate={onUpdateTask}
+            onDelete={onDeleteTask}
           />
         ))}
       </div>
