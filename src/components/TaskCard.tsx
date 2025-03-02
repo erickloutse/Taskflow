@@ -97,8 +97,8 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
   return (
     <>
       {/* Boutons d'action positionnés au-dessus de la carte */}
-      <div className="relative mb-8">
-        <div className="absolute -top-3 right-2 flex gap-1 z-20">
+      <div className="relative mb-10">
+        <div className="absolute -top-6 right-2 flex gap-1 z-20">
           <Button
             variant="secondary"
             size="icon"
