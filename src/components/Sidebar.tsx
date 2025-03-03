@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { LayoutDashboard, Users, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 const menuItems = [
   {
@@ -35,8 +34,16 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState("Dashboard");
+interface SidebarProps {
+  activeItem: string;
+  onViewChange: (view: string) => void;
+}
+
+export default function Sidebar({ activeItem, onViewChange }: SidebarProps) {
+  const handleItemClick = (label: string, href: string) => {
+    onViewChange(label);
+    window.location.hash = href;
+  };
 
   return (
     <div className="h-full p-4">
@@ -56,10 +63,7 @@ export default function Sidebar() {
                 activeItem === item.label && "bg-gradient-to-r bg-opacity-10",
                 activeItem === item.label && item.color
               )}
-              onClick={() => {
-                setActiveItem(item.label);
-                window.location.hash = item.href;
-              }}
+              onClick={() => handleItemClick(item.label, item.href)}
             >
               <div
                 className={cn(

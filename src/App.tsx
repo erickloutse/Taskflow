@@ -22,6 +22,9 @@ import CreateTaskDialog from "@/components/tasks/CreateTaskDialog";
 import { type Task, type Column } from "@/types";
 import { createTask, getTasks, updateTask, deleteTask } from "@/lib/api";
 import TaskCard from "@/components/TaskCard";
+import TeamView from "@/components/views/TeamView";
+import CalendarView from "@/components/views/CalendarView";
+import SettingsView from "@/components/views/SettingsView";
 
 const initialColumns: Column[] = [
   {
@@ -46,6 +49,7 @@ function App() {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeView, setActiveView] = useState("Dashboard");
   const { toast } = useToast();
   const { isAuthenticated, user, logout } = useAuth();
 
@@ -68,6 +72,42 @@ function App() {
       fetchTasks();
     }
   }, [isAuthenticated]);
+
+  // Écouter les changements de hash dans l'URL
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Enlever le # du début
+      if (hash) {
+        switch (hash) {
+          case "dashboard":
+            setActiveView("Dashboard");
+            break;
+          case "team":
+            setActiveView("Team");
+            break;
+          case "calendar":
+            setActiveView("Calendar");
+            break;
+          case "settings":
+            setActiveView("Settings");
+            break;
+          default:
+            setActiveView("Dashboard");
+        }
+      }
+    };
+
+    // Vérifier le hash initial
+    handleHashChange();
+
+    // Ajouter un écouteur pour les changements futurs
+    window.addEventListener("hashchange", handleHashChange);
+
+    // Nettoyer l'écouteur
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
 
   const fetchTasks = async () => {
     try {
@@ -283,6 +323,48 @@ function App() {
     }
   };
 
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+  };
+
+  const renderActiveView = () => {
+    switch (activeView) {
+      case "Dashboard":
+        return (
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <Board
+              columns={columns}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
+            <DragOverlay>
+              {activeTask ? (
+                <div className="w-full max-w-md">
+                  <TaskCard
+                    task={activeTask}
+                    onUpdate={handleUpdateTask}
+                    onDelete={handleDeleteTask}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        );
+      case "Team":
+        return <TeamView />;
+      case "Calendar":
+        return <CalendarView tasks={columns.flatMap((col) => col.tasks)} />;
+      case "Settings":
+        return <SettingsView />;
+      default:
+        return null;
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
@@ -357,33 +439,10 @@ function App() {
           }}
           className="border-r bg-white/80 backdrop-blur-sm"
         >
-          <Sidebar />
+          <Sidebar activeItem={activeView} onViewChange={handleViewChange} />
         </motion.div>
 
-        <main className="flex-1 overflow-auto p-6">
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <Board
-              columns={columns}
-              onUpdateTask={handleUpdateTask}
-              onDeleteTask={handleDeleteTask}
-            />
-            <DragOverlay>
-              {activeTask ? (
-                <div className="w-full max-w-md">
-                  <TaskCard
-                    task={activeTask}
-                    onUpdate={handleUpdateTask}
-                    onDelete={handleDeleteTask}
-                  />
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        </main>
+        <main className="flex-1 overflow-auto p-6">{renderActiveView()}</main>
       </div>
     </div>
   );
