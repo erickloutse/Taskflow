@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,14 +26,20 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getUsers } from "@/lib/api";
+import { User } from "@/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 const schema = z.object({
   title: z.string().min(1),
   description: z.string(),
   priority: z.enum(["low", "medium", "high"]),
   dueDate: z.date(),
+  assignees: z.array(z.string()).optional(),
 });
 
 interface CreateTaskDialogProps {
@@ -46,6 +52,9 @@ export default function CreateTaskDialog({
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+
   const {
     register,
     handleSubmit,
@@ -58,8 +67,22 @@ export default function CreateTaskDialog({
     defaultValues: {
       priority: "medium",
       dueDate: new Date(),
+      assignees: [],
     },
   });
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const onSubmit = async (data: any) => {
     setIsLoading(true);
@@ -67,9 +90,11 @@ export default function CreateTaskDialog({
       await onCreateTask({
         ...data,
         status: "todo",
+        assignees: selectedAssignees,
       });
       setOpen(false);
       reset();
+      setSelectedAssignees([]);
     } catch (error) {
       console.error("Error creating task:", error);
     } finally {
@@ -82,6 +107,16 @@ export default function CreateTaskDialog({
       setValue("dueDate", date);
       setCalendarOpen(false); // Ferme le calendrier après la sélection
     }
+  };
+
+  const handleAssigneeToggle = (userId: string) => {
+    setSelectedAssignees((prev) => {
+      if (prev.includes(userId)) {
+        return prev.filter((id) => id !== userId);
+      } else {
+        return [...prev, userId];
+      }
+    });
   };
 
   return (
@@ -150,6 +185,50 @@ export default function CreateTaskDialog({
               </PopoverContent>
             </Popover>
           </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Assign Team Members
+            </Label>
+            <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+              {users.length > 0 ? (
+                users.map((user) => (
+                  <div
+                    key={user._id || user.id}
+                    className="flex items-center space-x-2 py-2"
+                  >
+                    <Checkbox
+                      id={`user-${user._id || user.id}`}
+                      checked={selectedAssignees.includes(
+                        user._id || (user.id as string)
+                      )}
+                      onCheckedChange={() =>
+                        handleAssigneeToggle(user._id || (user.id as string))
+                      }
+                    />
+                    <Label
+                      htmlFor={`user-${user._id || user.id}`}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback className="bg-indigo-500 text-white text-xs">
+                          {user.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{user.name}</span>
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-2">
+                  No team members available
+                </p>
+              )}
+            </div>
+          </div>
+
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Creating..." : "Create Task"}
           </Button>

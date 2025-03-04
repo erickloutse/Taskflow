@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Edit2,
   Trash2,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { type Task } from "@/types";
@@ -97,8 +98,8 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
   return (
     <>
       {/* Boutons d'action positionnés au-dessus de la carte */}
-      <div className="relative mb-10">
-        <div className="absolute -top-6 right-2 flex gap-1 z-20">
+      <div className="relative mb-8">
+        <div className="absolute -top-3 right-2 flex gap-1 z-20">
           <Button
             variant="secondary"
             size="icon"
@@ -157,24 +158,39 @@ export default function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
               <span>{format(new Date(task.dueDate), "MMM dd")}</span>
             </div>
 
-            <div className="flex items-center -space-x-2">
-              {task.assignees && task.assignees.length > 0 ? (
-                task.assignees.map((assignee) => (
-                  <Avatar
-                    key={assignee.id || assignee._id}
-                    className="h-8 w-8 border-2 border-background transition-transform hover:scale-110"
-                  >
-                    <AvatarImage src={assignee.avatar} />
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
-                      {assignee.name.charAt(0)}
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {task.assignees?.length || 0} assignee(s)
+                </span>
+              </div>
+              <div className="flex items-center -space-x-2">
+                {task.assignees && task.assignees.length > 0 ? (
+                  task.assignees.slice(0, 3).map((assignee) => (
+                    <Avatar
+                      key={assignee.id || assignee._id}
+                      className="h-6 w-6 border-2 border-background transition-transform hover:scale-110"
+                    >
+                      <AvatarImage src={assignee.avatar} />
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-xs">
+                        {assignee.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    No assignees
+                  </span>
+                )}
+                {task.assignees && task.assignees.length > 3 && (
+                  <Avatar className="h-6 w-6 border-2 border-background bg-gray-200">
+                    <AvatarFallback className="text-xs">
+                      +{task.assignees.length - 3}
                     </AvatarFallback>
                   </Avatar>
-                ))
-              ) : (
-                <span className="text-xs text-muted-foreground">
-                  No assignees
-                </span>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </motion.div>

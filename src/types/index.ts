@@ -4,6 +4,13 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
+  role?: "admin" | "manager" | "developer" | "designer" | "tester";
+  skills?: string[];
+  phone?: string;
+  location?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Task {
