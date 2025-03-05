@@ -2,6 +2,13 @@
 
 A modern, real-time task management application built with React, Node.js, and MongoDB.
 
+![Aperçu du projet 1](screenshot1.png)
+![Aperçu du projet 2](screenshot2.png)
+![Aperçu du projet 3](screenshot3.png)
+![Aperçu du projet 4](screenshot4.png)
+![Aperçu du projet 5](screenshot5.png)
+![Aperçu du projet 6](screenshot6.png)
+
 ## Features
 
 - 🔐 User Authentication
@@ -190,4 +197,3 @@ La barre latérale permet de naviguer vers différentes sections de l'applicatio
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
